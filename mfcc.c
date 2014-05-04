@@ -50,6 +50,13 @@ static void log_mel_spectrum(float32_t *_input, float32_t* _output)
   }
 }
 
+/**
+ * @brief MFCC init. Need to initialize only once
+ *
+ * @param _sample_rate maximum sampling rate
+ *
+ * @return  0 if sucessful, 1 dct init err, -1 rfft init err
+ */
 int8_t mfcc_init(uint16_t _sample_rate)
 {
   mel_filterbanks_init(_sample_rate);
@@ -60,6 +67,12 @@ int8_t mfcc_init(uint16_t _sample_rate)
   return 0;
 }
 
+/**
+ * @brief Calculate MFCC, this can be in place
+ *
+ * @param _samples audio sample length == NUM_SAMPLES
+ * @param _mfcc MFCC array, length == NUM_SAMPLES
+ */
 void mfcc(float32_t* _samples, float32_t* _mfcc)
 {
   float32_t state[NUM_FILTER_BANKS];
