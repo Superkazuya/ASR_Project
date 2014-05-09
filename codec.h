@@ -76,7 +76,7 @@
 
 
 //function prototypes
-void codec_init();
+void codec_init(uint16_t _audio_freq);
 static void codec_ctrl_init();
 static void send_codec_ctrl(uint8_t controlBytes[], uint8_t numBytes);
 static uint8_t read_codec_register(uint8_t mapByte);

@@ -7,7 +7,7 @@
 
 #include "codec.h"
 
-void codec_init()
+void codec_init(uint16_t _audio_freq)
 {
 	GPIO_InitTypeDef PinInitStruct;
 	GPIO_StructInit(&PinInitStruct);
@@ -64,7 +64,7 @@ void codec_init()
 
 	// configure I2S port
 	SPI_I2S_DeInit(CODEC_I2S);
-	I2S_InitType.I2S_AudioFreq = I2S_AudioFreq_48k;
+	I2S_InitType.I2S_AudioFreq = _audio_freq;
 	I2S_InitType.I2S_MCLKOutput = I2S_MCLKOutput_Enable;
 	I2S_InitType.I2S_DataFormat = I2S_DataFormat_16b;
 	I2S_InitType.I2S_Mode = I2S_Mode_MasterTx;
@@ -165,9 +165,11 @@ static void codec_ctrl_init()
 	CodecCommandBuffer[2] = 0x0A;
 	send_codec_ctrl(CodecCommandBuffer, 3);
 
+	/*
 	CodecCommandBuffer[0] = 0x0F;
 	CodecCommandBuffer[1] = 0x02;
 	send_codec_ctrl(CodecCommandBuffer, 2);
+	*/
 
 	CodecCommandBuffer[0] = 0x1F;
 	CodecCommandBuffer[1] = 0x0F;

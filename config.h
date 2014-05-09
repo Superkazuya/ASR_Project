@@ -41,6 +41,6 @@ extern __IO uint16_t status;
 #define SPI_MOSI_AF GPIO_AF_SPI2
 
 
-#define FREQZ 16000
-#define VOLUME 100
+#define FREQZ 48000
+#define VOLUME 50
 
