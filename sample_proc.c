@@ -2,22 +2,19 @@
 #include "mfcc.h"
 
 static float32_t Hamming[NUM_SAMPLES];
-//extern float32_t buffer[DATA_ROW][DATA_COL];
 uint16_t row_idx = 0;
 uint16_t col_idx = 0;
 
 
-/*
 void filter_init()
 {
-  filter.LP_HZ = 8000;
-  filter.HP_HZ = 10;
-  filter.Fs = 16000;
-  filter.Out_MicChannels = 1;
-  filter.In_MicChannels = 1;
-  PDM_Filter_Init(&filter);
+  pdm.LP_HZ = 8000;
+  pdm.HP_HZ = 10;
+  pdm.Fs = OUT_FREQZ;
+  pdm.Out_MicChannels = 1;
+  pdm.In_MicChannels = 1;
+  PDM_Filter_Init(&pdm);
 }
-*/
 
 inline void hamming_init()
 {
@@ -27,6 +24,18 @@ inline void hamming_init()
 }
 
 void sample_proc(int16_t _sample)
+{
+  static uint8_t i = 0;
+  static uint16_t *head = (uint16_t *)buffer[0];
+  *(head+i++) = HTONS(_sample);
+
+  if(i < RAW_BUFSIZE)
+    return;
+  i = 0;
+  status |= 1 << STATUS_RAW_BUF_FULL;
+}
+
+void store(int16_t _sample)
 {
   if(col_idx >= DATA_COL)
   {

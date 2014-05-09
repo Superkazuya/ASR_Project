@@ -40,7 +40,7 @@ OBJCOPY=arm-none-eabi-objcopy
 CFLAGS  = -g
 CFLAGS += -Tstm32_flash.ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4
-CFLAGS += -mfloat-abi=hard 
+CFLAGS += -mfloat-abi=hard
 CFLAGS += -mfpu=fpv4-sp-d16
 CFLAGS += -DUSE_STDPERIPH_DRIVER -DARM_MATH_CM4 -D__FPU_PRESENT=1
 #CFLAGS += -L$(SLIB)
@@ -53,9 +53,11 @@ CFLAGS += -I$(STM_COMMON)Utilities/STM32F4-Discovery
 CFLAGS += -I$(STM_COMMON)Libraries/CMSIS/Include 
 CFLAGS += -I$(STM_COMMON)Libraries/CMSIS/ST/STM32F4xx/Include
 CFLAGS += -I$(STM_COMMON)Libraries/STM32F4xx_StdPeriph_Driver/inc
-LDFLAGS = -L. 
+#LDFLAGS = -L. 
 LDFLAGS += -lm
 #LDFLAGS += -l arm_cortexM4lf_math
+LDFLAGS += -L $(STM_COMMON)PDMFilter/
+LDFLAGS += -l PDMFilter_CM4F_GCC
 
 # add startup file to build
 SRCS += $(STM_COMMON)Libraries/CMSIS/ST/STM32F4xx/Source/Templates/TrueSTUDIO/startup_stm32f4xx.s 

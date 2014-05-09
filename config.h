@@ -6,10 +6,11 @@
 
 #define NUM_SAMPLES 256
 #define DATA_COL NUM_SAMPLES
-#define DATA_ROW 100
+#define DATA_ROW 16
 
 enum STATUS
 {
+  STATUS_RAW_BUF_FULL,
   SIG_ON,
   BUF_RDY,
   STATUS_LAST
@@ -17,7 +18,8 @@ enum STATUS
 
 enum OPERATION
 {
-  OP_PROCESS,
+  OP_IDLE = 0,
+  OP_PROC = 1 << STATUS_RAW_BUF_FULL,
   OP_EXIT,
   OP_LAST
 };
