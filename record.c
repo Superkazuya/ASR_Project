@@ -4,14 +4,6 @@
 float32_t buffer[DATA_ROW][DATA_COL];
 __IO uint16_t status = 0;
 
-/*
-void Delay(__IO uint32_t _cycle)
-{
-  while(_cycle--);
-}
-
-*/
-
 static void gpio_init()
 {
   RCC_AHB1PeriphClockCmd(SPI_SCK_GPIO_CLK | SPI_MOSI_GPIO_CLK, ENABLE);
@@ -62,7 +54,7 @@ static void spi_init(uint16_t _audio_freqz)
 void record_init(uint16_t _audio_freqz)
 {
   RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;
-  //filter_init();
+  filter_init();
   gpio_init();
   nvic_init();
   spi_init(_audio_freqz);
@@ -72,7 +64,11 @@ void SPI2_IRQHandler(void)
 {
   if(SPI_I2S_GetITStatus(SPI2, SPI_I2S_IT_RXNE) != SET)
     return;
+  // receiver not empty
+  if(status & (1 << STATUS_RAW_BUF_FULL)) //raw buff underrun
+  {
+      status = (1 << STATUS_RAW_BUF_UNDERRUN);
+      return;
+  }
   sample_proc(SPI_I2S_ReceiveData(SPI2));
-  //status |= DATA_RDY;
-  //status &= ~STATUS_DATAREADY;
 }

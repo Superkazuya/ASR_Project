@@ -4,22 +4,35 @@
 
 //#define CEILING(x, y) (((x)+(y)-1)/(y))
 
-#define NUM_SAMPLES 256
+#define SAMPLING_FREQZ 16000
+#define VOLUME 40
+
+#define NUM_SAMPLES 512
 #define DATA_COL NUM_SAMPLES
 #define DATA_ROW 16
+#define FRAME_OVERLAP 100
+#define RECI_DECIMATION 64
+#define RECORD_I2S_FS (SAMPLING_FREQZ*RECI_DECIMATION/16/2)
+#define OUT_BUFSIZE (SAMPLING_FREQZ/1000) //uint16_t
+#define RAW_BUFSIZE (SAMPLING_FREQZ*RECI_DECIMATION/8000/2) //uint16_t
+//OVERLAP < DATA_COL, compile time check
+uint8_t check[FRAME_OVERLAP < DATA_COL ? 1:-1];
+uint8_t check1[OUT_BUFSIZE < DATA_COL ? 1:-1];
+//#define COL_PROC CEILING(DATA_COL, (DATA_COL-FRAME_OVERLAP)) //This many 1d arrays(frames) will be processed at most, for given FRAME_OVERLAP
+
 
 enum STATUS
 {
   STATUS_RAW_BUF_FULL,
-  SIG_ON,
-  BUF_RDY,
+  STATUS_RAW_BUF_UNDERRUN,
   STATUS_LAST
 };
 
-enum OPERATION
+enum OPERATIONS
 {
   OP_IDLE = 0,
-  OP_PROC = 1 << STATUS_RAW_BUF_FULL,
+  OP_RAWBUF_FULL = 1 << STATUS_RAW_BUF_FULL,
+  OP_RAWBUF_UR = 1 << STATUS_RAW_BUF_UNDERRUN,
   OP_EXIT,
   OP_LAST
 };
@@ -41,6 +54,4 @@ extern __IO uint16_t status;
 #define SPI_MOSI_AF GPIO_AF_SPI2
 
 
-#define FREQZ 48000
-#define VOLUME 50
 

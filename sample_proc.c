@@ -10,7 +10,7 @@ void filter_init()
 {
   pdm.LP_HZ = 8000;
   pdm.HP_HZ = 10;
-  pdm.Fs = OUT_FREQZ;
+  pdm.Fs = SAMPLING_FREQZ;
   pdm.Out_MicChannels = 1;
   pdm.In_MicChannels = 1;
   PDM_Filter_Init(&pdm);
