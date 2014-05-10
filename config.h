@@ -2,14 +2,27 @@
 #include "stm32f4xx_conf.h"
 #include "arm_math.h"
 
+//gpio pin settings
+#define SPI_SCK_GPIO_CLK RCC_AHB1Periph_GPIOB
+#define SPI_SCK_GPIO_PORT GPIOB
+#define SPI_SCK_PIN GPIO_Pin_10
+#define SPI_SCK_SOURCE GPIO_PinSource10
+#define SPI_SCK_AF GPIO_AF_SPI2
+
+#define SPI_MOSI_GPIO_CLK RCC_AHB1Periph_GPIOC
+#define SPI_MOSI_GPIO_PORT GPIOC
+#define SPI_MOSI_PIN GPIO_Pin_3
+#define SPI_MOSI_SOURCE GPIO_PinSource3
+#define SPI_MOSI_AF GPIO_AF_SPI2
+
 //#define CEILING(x, y) (((x)+(y)-1)/(y))
 
-#define SAMPLING_FREQZ 16000
+#define SAMPLING_FREQZ 8000
 #define VOLUME 40
 
-#define NUM_SAMPLES 512
-#define DATA_COL NUM_SAMPLES
-#define DATA_ROW 16
+#define NUM_SAMPLES 256
+#define DATA_COL NUM_SAMPLES //must be multiple of OUT_BUFSIZE
+#define DATA_ROW 1
 #define FRAME_OVERLAP 100
 #define RECI_DECIMATION 64
 #define RECORD_I2S_FS (SAMPLING_FREQZ*RECI_DECIMATION/16/2)
@@ -23,35 +36,18 @@ uint8_t check1[OUT_BUFSIZE < DATA_COL ? 1:-1];
 
 enum STATUS
 {
-  STATUS_RAW_BUF_FULL,
-  STATUS_RAW_BUF_UNDERRUN,
+  STATUS_IDLE,
+  STATUS_RAWBUF1_FULL = 1,
+  STATUS_RAWBUF2_FULL = 1 << 1,
+  STATUS_RAWBUF_UNDERRUN = STATUS_RAWBUF1_FULL | STATUS_RAWBUF2_FULL,
   STATUS_LAST
 };
 
-enum OPERATIONS
-{
-  OP_IDLE = 0,
-  OP_RAWBUF_FULL = 1 << STATUS_RAW_BUF_FULL,
-  OP_RAWBUF_UR = 1 << STATUS_RAW_BUF_UNDERRUN,
-  OP_EXIT,
-  OP_LAST
-};
-
 //global variables
-extern float32_t buffer[DATA_ROW][DATA_COL];
-extern __IO uint16_t status;
+float32_t buffer[DATA_ROW][DATA_COL];
+extern uint16_t raw_buffer1[RAW_BUFSIZE];
+extern uint16_t raw_buffer2[RAW_BUFSIZE];
+extern uint16_t* raw_buffer;
 
-#define SPI_SCK_GPIO_CLK RCC_AHB1Periph_GPIOB
-#define SPI_SCK_GPIO_PORT GPIOB
-#define SPI_SCK_PIN GPIO_Pin_10
-#define SPI_SCK_SOURCE GPIO_PinSource10
-#define SPI_SCK_AF GPIO_AF_SPI2
-
-#define SPI_MOSI_GPIO_CLK RCC_AHB1Periph_GPIOC
-#define SPI_MOSI_GPIO_PORT GPIOC
-#define SPI_MOSI_PIN GPIO_Pin_3
-#define SPI_MOSI_SOURCE GPIO_PinSource3
-#define SPI_MOSI_AF GPIO_AF_SPI2
-
-
-
+extern uint16_t buff[OUT_BUFSIZE];
+__IO uint8_t status;

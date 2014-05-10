@@ -6,6 +6,16 @@ uint16_t row_idx = 0;
 uint16_t col_idx = 0;
 
 
+void SPI2_IRQHandler(void)
+{
+  if(SPI_I2S_GetITStatus(SPI2, SPI_I2S_IT_RXNE) != SET)
+    return;
+  // receiver not empty
+  if(status == STATUS_RAWBUF_UNDERRUN) //raw buff underrun
+    return;
+  sample_proc(SPI_I2S_ReceiveData(SPI2));
+}
+
 void filter_init()
 {
   pdm.LP_HZ = 8000;
@@ -23,16 +33,21 @@ inline void hamming_init()
     Hamming[i] = 0.54-0.46*arm_cos_f32((2*PI*i)/(NUM_SAMPLES-1));
 }
 
+//called in the interrupt
 void sample_proc(int16_t _sample)
 {
   static uint8_t i = 0;
-  static uint16_t *head = (uint16_t *)buffer[0];
-  *(head+i++) = HTONS(_sample);
+  raw_buffer[i++] = HTONS(_sample);
 
   if(i < RAW_BUFSIZE)
     return;
   i = 0;
-  status |= 1 << STATUS_RAW_BUF_FULL;
+  if(status)
+    status = STATUS_RAWBUF_UNDERRUN;
+  else if(raw_buffer == raw_buffer1)
+    status = STATUS_RAWBUF1_FULL;
+  else
+    status = STATUS_RAWBUF2_FULL;
 }
 
 void store(int16_t _sample)
