@@ -13,6 +13,7 @@ lib/*.ld
 .\#*
 *~
 *.map
+.ycm_extra_conf.*
 *.log
 html/
 latex/
