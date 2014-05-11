@@ -43,7 +43,6 @@ static void spi_init(uint16_t _audio_freqz)
     .I2S_MCLKOutput = I2S_MCLKOutput_Disable
   };
   I2S_Init(SPI2, &i2s);
-  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);
   I2S_Cmd(SPI2, ENABLE);
 }
  

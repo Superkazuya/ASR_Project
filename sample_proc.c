@@ -1,6 +1,7 @@
 #include "sample_proc.h"
 #include "mfcc.h"
 
+float32_t buffer[DATA_ROW][DATA_COL] = { {0} };
 static float32_t Hamming[NUM_SAMPLES];
 uint16_t row_idx = 0;
 uint16_t col_idx = 0;
@@ -8,12 +9,8 @@ uint16_t col_idx = 0;
 
 void SPI2_IRQHandler(void)
 {
-  if(SPI_I2S_GetITStatus(SPI2, SPI_I2S_IT_RXNE) != SET)
-    return;
-  // receiver not empty
-  if(status == STATUS_RAWBUF_UNDERRUN) //raw buff underrun
-    return;
-  sample_proc(SPI_I2S_ReceiveData(SPI2));
+  if(SPI_I2S_GetITStatus(SPI2, SPI_I2S_IT_RXNE) == SET)
+    sample_proc(SPI_I2S_ReceiveData(SPI2));
 }
 
 void filter_init()
@@ -36,7 +33,7 @@ inline void hamming_init()
 //called in the interrupt
 void sample_proc(int16_t _sample)
 {
-  static uint8_t i = 0;
+  static uint16_t i = 0;
   raw_buffer[i++] = HTONS(_sample);
 
   if(i < RAW_BUFSIZE)
@@ -65,8 +62,8 @@ void store(int16_t _sample)
     //signal ready
   }
 
-  uint16_t row = row_idx;
-  uint16_t col = col_idx;
+  int16_t row = row_idx;
+  int16_t col = col_idx;
   while(col >= 0 && row <= DATA_ROW)
   {
     buffer[row][col] = _sample*Hamming[col];

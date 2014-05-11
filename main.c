@@ -3,22 +3,20 @@
 #include "sample_proc.h"
 #include "record.h"
 #include "stm32f4_discovery_audio_codec.h"
+#include "stm32f4_discovery.h"
 
 
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
 uint16_t* raw_buffer=raw_buffer1;
 
-uint16_t buff1[OUT_BUFSIZE];
-uint16_t buff2[OUT_BUFSIZE];
-uint16_t* buff=buff1;
+uint16_t buff[OUT_BUFSIZE];
 
 static void event_handler();
 static void raw_buffull_handler();
-static void playback();
 static void exit_handler();
 static void idle_handler();
-static void underrun_handler()
+static void underrun_handler();
 
 
 static void event_handler()
@@ -35,6 +33,7 @@ static void event_handler()
 
 static void underrun_handler()
 {
+  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);
   while(1);
 }
 
@@ -47,18 +46,6 @@ inline void exit_handler()
   while(1);
 }
 
-static void playback()
-{
-  uint32_t i = 0;
-  while(i <= DATA_COL)
-  {
-    while(SPI_I2S_GetFlagStatus(CODEC_I2S, SPI_I2S_FLAG_TXE) != SET);
-    SPI_I2S_SendData(CODEC_I2S, buff[i]);
-    while(SPI_I2S_GetFlagStatus(CODEC_I2S, SPI_I2S_FLAG_TXE) != SET);
-    SPI_I2S_SendData(CODEC_I2S, buff[i++]);
-  }
-}
-
 static void raw_buffull_handler()
 {
   if(status == STATUS_RAWBUF1_FULL)
@@ -67,16 +54,21 @@ static void raw_buffull_handler()
     raw_buffer = raw_buffer2;
 
   PDM_Filter_64_LSB((uint8_t *)raw_buffer, buff, VOLUME, &pdm);
-  EVAL_AUDIO_Play(buff, OUT_BUFSIZE);
+  status = STATUS_IDLE;
+  //EVAL_AUDIO_Play(buff, sizeof(uint16_t)*OUT_BUFSIZE);
+  uint16_t i;
+  for(i = 0; i < OUT_BUFSIZE; ++i)
+    store(buff[i]);
 }
 
 int main()
 {
-  status = STATUS_IDLE;
-  //hamming_init();
+  hamming_init();
+  STM_EVAL_LEDInit(LED3);
   mfcc_init(SAMPLING_FREQZ);
-  record_init(RECORD_I2S_FS);
   EVAL_AUDIO_Init(0, 80, SAMPLING_FREQZ);
+  record_init(RECORD_I2S_FS);
+  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);
   //record start
   while(1)
     event_handler();
@@ -91,8 +83,7 @@ uint16_t EVAL_AUDIO_GetSampleCallBack(void)
 
 void EVAL_AUDIO_TransferComplete_CallBack(uint16_t* _ptr_buffer, uint32_t _size)
 {
-  if(_size)
-    return;
+  //_size is always 0
 }
 
 uint32_t Codec_TIMEOUT_UserCallback(void)

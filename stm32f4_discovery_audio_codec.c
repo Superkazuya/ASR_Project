@@ -1335,9 +1335,7 @@ void Audio_MAL_Play(uint32_t Addr, uint32_t Size)
   
   /* If the I2S peripheral is still not enabled, enable it */
   if ((CODEC_I2S->I2SCFGR & I2S_ENABLE_MASK) == 0)
-  {
     I2S_Cmd(CODEC_I2S, ENABLE);
-  }
 }
 
 /**

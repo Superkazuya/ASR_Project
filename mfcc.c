@@ -75,7 +75,7 @@ int8_t mfcc_init(uint16_t _sample_rate)
  */
 void mfcc(float32_t* _samples, float32_t* _mfcc)
 {
-  float32_t state[NUM_FILTER_BANKS];
+  float32_t state[2*NUM_SAMPLES] = {0};
   powerspectrum(_samples, _samples);
   log_mel_spectrum(_samples, _mfcc);
   arm_dct4_f32(&dct, state, _mfcc);

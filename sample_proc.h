@@ -7,3 +7,4 @@ PDMFilter_InitStruct pdm;
 inline void hamming_init();
 inline void filter_init();
 void sample_proc(int16_t _sample);
+void store(int16_t _sample);
