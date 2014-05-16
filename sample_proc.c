@@ -1,16 +1,39 @@
 #include "sample_proc.h"
 #include "mfcc.h"
 
-float32_t buffer[DATA_ROW][DATA_COL] = { {0} };
-static float32_t Hamming[NUM_SAMPLES];
-uint16_t row_idx = 0;
-uint16_t col_idx = 0;
+uint16_t frame[DATA_ROW][DATA_COL] = { {0} };
+float32_t feature_vec[NUM_FRAME][DCT_DIGIT] = {{0}};
+static float32_t Hamming[FRAME_SIZE];
+
+//static uint16_t zero_cross[DATA_COL] = {0};
+//static uint32_t energy[DATA_COL] = {0};
 
 
 void SPI2_IRQHandler(void)
 {
   if(SPI_I2S_GetITStatus(SPI2, SPI_I2S_IT_RXNE) == SET)
     sample_proc(SPI_I2S_ReceiveData(SPI2));
+}
+
+//called in the interrupt
+void sample_proc(int16_t _sample)
+{
+  static uint16_t i = 0;
+  raw_buffer[i++] = HTONS(_sample);
+
+  if(i < RAW_BUFSIZE)
+    return;
+  i = 0;
+  if(raw_buffer == raw_buffer1)
+  {
+    rawbuf_status |= RAWBUF_FULL1;
+    raw_buffer = raw_buffer2;
+  }
+  else
+  {
+    rawbuf_status |= RAWBUF_FULL2;
+    raw_buffer = raw_buffer2;
+  }
 }
 
 void filter_init()
@@ -26,49 +49,25 @@ void filter_init()
 inline void hamming_init()
 {
   uint16_t i;
-  for(i = 0; i < NUM_SAMPLES; ++i)
-    Hamming[i] = 0.54-0.46*arm_cos_f32((2*PI*i)/(NUM_SAMPLES-1));
+  for(i = 0; i < FRAME_SIZE; ++i)
+    Hamming[i] = 0.54-0.46*arm_cos_f32((2*PI*i)/(FRAME_SIZE-1));
 }
 
-//called in the interrupt
-void sample_proc(int16_t _sample)
+void enframe(uint16_t* _data, uint16_t _frame_num)
 {
-  static uint16_t i = 0;
-  raw_buffer[i++] = HTONS(_sample);
-
-  if(i < RAW_BUFSIZE)
+  static float32_t fdata[FFT_SIZE];//static to prevent overflow. FFT_SIZE>FRAME_SIZE
+  if(_frame_num >= NUM_FRAME)
+  {
+    STM_EVAL_LEDOn(LED5);
     return;
-  i = 0;
-  if(status)
-    status = STATUS_RAWBUF_UNDERRUN;
-  else if(raw_buffer == raw_buffer1)
-    status = STATUS_RAWBUF1_FULL;
-  else
-    status = STATUS_RAWBUF2_FULL;
+  }
+  uint16_t i;
+  for(i = 0; i < FRAME_SIZE; ++i)
+    fdata[i] = Hamming[i]*_data[i];
+  memset(fdata+FRAME_SIZE, 0, (FFT_SIZE-FRAME_SIZE+1)*sizeof(float32_t));//zero padding
+
+  mfcc(fdata, feature_vec[_frame_num]);
+  enframe(_data+FRAME_SHIFT, _frame_num+1);
 }
 
-void store(int16_t _sample)
-{
-  if(col_idx >= DATA_COL)
-  {
-    mfcc(buffer[row_idx], buffer[row_idx]);
-    col_idx -= FRAME_OVERLAP;
-    row_idx++;
-  }
-  if(row_idx >= DATA_ROW)
-  {
-    row_idx = 0;
-    col_idx = 0;
-    //signal ready
-  }
 
-  int16_t row = row_idx;
-  int16_t col = col_idx;
-  while(col >= 0 && row <= DATA_ROW)
-  {
-    buffer[row][col] = _sample*Hamming[col];
-    col -= FRAME_OVERLAP;
-    row++;
-  }
-  col_idx++;
-}

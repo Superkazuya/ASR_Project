@@ -2,15 +2,13 @@
 #include "mfcc.h"
 #include "sample_proc.h"
 #include "record.h"
-#include "stm32f4_discovery_audio_codec.h"
-#include "stm32f4_discovery.h"
 
 
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
 uint16_t* raw_buffer=raw_buffer1;
+uint16_t data[MAX_BUF_SIZE];
 
-uint16_t buff[OUT_BUFSIZE];
 
 static void event_handler();
 static void raw_buffull_handler();
@@ -22,18 +20,18 @@ static void underrun_handler();
 static void event_handler()
 {
   //static event handler 
-  static void (*handler[STATUS_LAST])() = {
-    [STATUS_IDLE] = idle_handler,
-    [STATUS_RAWBUF1_FULL] = raw_buffull_handler,
-    [STATUS_RAWBUF2_FULL] = raw_buffull_handler,
-    [STATUS_RAWBUF_UNDERRUN] = underrun_handler
+  static void (*handler[RAWBUF_LAST])() = {
+    [RAWBUF_IDLE] = idle_handler,
+    [RAWBUF_FULL1] = raw_buffull_handler,
+    [RAWBUF_FULL2] = raw_buffull_handler,
+    [RAWBUF_UNDERRUN] = underrun_handler
   };
-  (*handler[status])();
+  (*handler[rawbuf_status])();
 }
 
 static void underrun_handler()
 {
-  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);
+  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
   while(1);
 }
 
@@ -48,24 +46,45 @@ inline void exit_handler()
 
 static void raw_buffull_handler()
 {
-  if(status == STATUS_RAWBUF1_FULL)
-    raw_buffer = raw_buffer1;
-  else if(status == STATUS_RAWBUF2_FULL)
-    raw_buffer = raw_buffer2;
+  STM_EVAL_LEDOn(LED4);
+  static uint16_t* buff = data;
+  if(rawbuf_status == RAWBUF_FULL1)
+  {
+    PDM_Filter_64_LSB((uint8_t *)raw_buffer1, buff, VOLUME, &pdm);
+    rawbuf_status &= ~RAWBUF_FULL1;
+  }
+  else if(rawbuf_status == RAWBUF_FULL2)
+  {
+    PDM_Filter_64_LSB((uint8_t *)raw_buffer2, buff, VOLUME, &pdm);
+    rawbuf_status &= ~RAWBUF_FULL2;
+  }
+  buff += OUT_BUFSIZE;
+  if(buff >= data+MAX_BUF_SIZE)
+  {
+    SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
+    STM_EVAL_LEDOn(LED3);
+    enframe(data, 0);
+  }
 
-  PDM_Filter_64_LSB((uint8_t *)raw_buffer, buff, VOLUME, &pdm);
-  status = STATUS_IDLE;
   //EVAL_AUDIO_Play(buff, sizeof(uint16_t)*OUT_BUFSIZE);
+  /*
   uint16_t i;
   for(i = 0; i < OUT_BUFSIZE; ++i)
-    store(buff[i]);
+    enframe(buff[i]);
+    */
 }
 
 int main()
 {
   hamming_init();
   STM_EVAL_LEDInit(LED3);
-  mfcc_init(SAMPLING_FREQZ);
+  STM_EVAL_LEDInit(LED4);
+  STM_EVAL_LEDInit(LED5);
+  STM_EVAL_LEDOff(LED3);
+  STM_EVAL_LEDOff(LED4);
+  STM_EVAL_LEDOff(LED5);
+  if(mfcc_init(SAMPLING_FREQZ) !=0)
+    while(1);
   EVAL_AUDIO_Init(0, 80, SAMPLING_FREQZ);
   record_init(RECORD_I2S_FS);
   SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);

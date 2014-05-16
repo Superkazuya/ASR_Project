@@ -1,6 +1,8 @@
 #pragma once
 #include "stm32f4xx_conf.h"
 #include "arm_math.h"
+#include "stm32f4_discovery_audio_codec.h"
+#include "stm32f4_discovery.h"
 
 //gpio pin settings
 #define SPI_SCK_GPIO_CLK RCC_AHB1Periph_GPIOB
@@ -15,39 +17,74 @@
 #define SPI_MOSI_SOURCE GPIO_PinSource3
 #define SPI_MOSI_AF GPIO_AF_SPI2
 
-//#define CEILING(x, y) (((x)+(y)-1)/(y))
-//#define COL_PROC CEILING(DATA_COL, (DATA_COL-FRAME_OVERLAP)) //This many 1d arrays(frames) will be processed at most, for given FRAME_OVERLAP
+#define CEILING(x, y) (((x)+(y)-1)/(y))
 
-#define SAMPLING_FREQZ 8000
+#define ROW_PROC CEILING(DATA_COL-1, FRAME_SHIFT) //This many 1d arrays(frames) will be processed at most, for given FRAME_OVERLAP
+
+#define SAMPLING_FREQZ 16000
 #define VOLUME 40
 
-#define NUM_SAMPLES 256
-#define DATA_COL NUM_SAMPLES //must be multiple of OUT_BUFSIZE
-#define DATA_ROW 50
-#define FRAME_OVERLAP 100
+
+#define FRAME_SIZE 256
+#define DATA_COL FRAME_SIZE //must be multiple of OUT_BUFSIZE
+#define DATA_ROW ROW_PROC
+#define FRAME_OVERLAP 64
+#define FRAME_SHIFT (FRAME_SIZE-FRAME_OVERLAP)
+#define NUM_FRAME CEILING((MAX_BUF_SIZE-FRAME_OVERLAP), FRAME_SHIFT)//total # of frames of recorded data
 #define RECI_DECIMATION 64
 #define RECORD_I2S_FS (SAMPLING_FREQZ*RECI_DECIMATION/16/2)
 #define OUT_BUFSIZE (SAMPLING_FREQZ/1000) //uint16_t
 #define RAW_BUFSIZE (SAMPLING_FREQZ*RECI_DECIMATION/8000/2) //uint16_t
-//OVERLAP < DATA_COL, compile time check
-uint8_t check[FRAME_OVERLAP < DATA_COL ? 1:-1];
+//pre-processed buffer
+#define MAX_BUF_SIZE (3*16000)
+
+//FRAM_SHIFT <= DATA_COL, compile time check
+uint8_t check[FRAME_SHIFT <= DATA_COL ? 1:-1];
 uint8_t check1[OUT_BUFSIZE < DATA_COL ? 1:-1];
 
 
-enum STATUS
+enum RAWBUFF_STATUS
 {
-  STATUS_IDLE = 0,
-  STATUS_RAWBUF1_FULL = 1,
-  STATUS_RAWBUF2_FULL = 1 << 1,
-  STATUS_RAWBUF_UNDERRUN = STATUS_RAWBUF1_FULL | STATUS_RAWBUF2_FULL,
-  STATUS_LAST
+  RAWBUF_IDLE = 0,
+  RAWBUF_FULL1 = 1,
+  RAWBUF_FULL2 = 1 << 1,
+  RAWBUF_UNDERRUN = RAWBUF_FULL1 | RAWBUF_FULL2,
+  RAWBUF_LAST
+};
+
+enum SIG_STATUS
+{
+  SIG_LAST
 };
 
 //global variables
-extern float32_t buffer[DATA_ROW][DATA_COL];
+//raw PDM data
 extern uint16_t raw_buffer1[RAW_BUFSIZE];
 extern uint16_t raw_buffer2[RAW_BUFSIZE];
 extern uint16_t* raw_buffer;
+__IO uint8_t rawbuf_status;
+//raw PCM data
+//extern uint16_t buff[OUT_BUFSIZE];
 
-extern uint16_t buff[OUT_BUFSIZE];
-__IO uint8_t status;
+//framed PCM data
+extern uint16_t frame[DATA_ROW][DATA_COL]; 
+//speech data
+extern uint16_t data[MAX_BUF_SIZE];
+
+//mfcc configuration
+#define FFT_SIZE 512 //FFT_SIZE >= FRAME_SIZE is recommanded
+#define DCT_SIZE 128
+
+#define NUM_FILTER_BANKS 26
+#define FREQ_LB 300
+#define FREQ_HB 20000
+#define DCT_LOW 2
+#define DCT_HIGH 13
+#define DCT_DIGIT (DCT_HIGH-DCT_LOW+1)
+
+//dual-threshold end point detection settings
+#define DIFF 655
+#define ZSR_THRESHOLD_LOW (FRAME_SIZE*2*
+#define ZSR_THRESHOLD_HIGH (FRAME_SIZE*
+#define ENG_THRESHOLD_LOW (FRAME_SIZE*
+#define ENG_THRESHOLD_HIGH (FRAME_SIZE*
