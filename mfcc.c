@@ -18,7 +18,7 @@ static arm_cfft_radix4_instance_f32 dct_cfft;
  */
 static void powerspectrum(float32_t *_samples, float32_t *_powerspectrum)
 {
-  float32_t tmp[FFT_SIZE*2];
+  float32_t tmp[FFT_SIZE*2]; //FFT_SIZE*2, with complex conjugate. CMSIS document never mentioned this.
   arm_rfft_f32(&rfft, _samples, tmp);
   arm_cmplx_mag_squared_f32(tmp, _powerspectrum, FFT_SIZE/2);
 }
@@ -49,8 +49,8 @@ static void mel_filterbanks_init(uint16_t _sample_rate)
 static void log_mel_spectrum(float32_t *_input, float32_t* _output) 
 {
   uint16_t bin,i;
-  //_output must be initialize to 0 first
-  memset(_output, 0, NUM_FILTER_BANKS*sizeof(float32_t));
+  //_output must be initialize to 0 first. 
+  //memset(_output, 0, NUM_FILTER_BANKS*sizeof(float32_t));
 
   for(bin = mel_filterbanks[0]; bin < mel_filterbanks[1]; ++bin)
     _output[0] += _input[bin]*(mel_filterbanks[1]-bin)/(mel_filterbanks[1]-mel_filterbanks[0]);
@@ -113,8 +113,8 @@ void mfcc(float32_t* _samples, float32_t* _mfcc)
   memcpy(mfcc+DCT_LOW, _mfcc, DCT_DIGIT*sizeof(float32_t));
 #else
   uint16_t i, j;
-  for(i = 0; i < NUM_FILTER_BANKS; ++i)
+  for(i = DCT_LOW; i <= DCT_HIGH; ++i)
     for(j = 0; j < NUM_FILTER_BANKS; ++j)
-      _mfcc[i] += mfcc[j]*arm_cos_f32(3.1415926*i*(j-0.5)/NUM_FILTER_BANKS);//todo
+      _mfcc[i-DCT_LOW] += mfcc[j]*arm_cos_f32(3.1415926*i*(j-0.5)/NUM_FILTER_BANKS);//todo
 #endif
 }
