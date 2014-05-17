@@ -88,3 +88,12 @@ extern uint16_t data[MAX_BUF_SIZE];
 #define ZSR_THRESHOLD_HIGH (FRAME_SIZE*
 #define ENG_THRESHOLD_LOW (FRAME_SIZE*
 #define ENG_THRESHOLD_HIGH (FRAME_SIZE*
+
+/*
+#include "usb_hcd_int.h"
+#include "usbh_usr.h"
+#include "usbh_core.h"
+#include "usbh_msc_core.h"
+*/
+
+float32_t feature_vec[NUM_FRAME*DCT_DIGIT];

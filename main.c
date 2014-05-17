@@ -2,7 +2,7 @@
 #include "mfcc.h"
 #include "sample_proc.h"
 #include "record.h"
-
+#include "usb.h"
 
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
@@ -64,6 +64,8 @@ static void raw_buffull_handler()
     SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
     STM_EVAL_LEDOn(LED3);
     enframe(data, 0);
+    while(1)
+      usb_process();
   }
 
   //EVAL_AUDIO_Play(buff, sizeof(uint16_t)*OUT_BUFSIZE);
@@ -74,9 +76,11 @@ static void raw_buffull_handler()
     */
 }
 
+
 int main()
 {
   hamming_init();
+  usb_init();
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);
   STM_EVAL_LEDInit(LED5);

@@ -42,7 +42,7 @@ CFLAGS += -Tstm32_flash.ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4
 CFLAGS += -mfloat-abi=hard
 CFLAGS += -mfpu=fpv4-sp-d16
-CFLAGS += -DUSE_STDPERIPH_DRIVER -DARM_MATH_CM4 -D__FPU_PRESENT=1
+CFLAGS += -DUSE_STDPERIPH_DRIVER -DARM_MATH_CM4 -D__FPU_PRESENT=1 -DUSE_USB_OTG_FS -DMEDIA_USB_KEY -DSTM32F4XX -DSTM32F407VG
 #CFLAGS += -L$(SLIB)
 #CFLAGS += -L. -lPDMFilter_GCC
 #CFLAGS += -Wa -mimplicit-it=thumb
@@ -53,6 +53,10 @@ CFLAGS += -I$(STM_COMMON)Utilities/STM32F4-Discovery
 CFLAGS += -I$(STM_COMMON)Libraries/CMSIS/Include 
 CFLAGS += -I$(STM_COMMON)Libraries/CMSIS/ST/STM32F4xx/Include
 CFLAGS += -I$(STM_COMMON)Libraries/STM32F4xx_StdPeriph_Driver/inc
+CFLAGS += -I$(STM_COMMON)Libraries/STM32_USB_OTG_Driver/inc
+CFLAGS += -I$(STM_COMMON)Libraries/STM32_USB_HOST_Library/Core/inc
+CFLAGS += -I$(STM_COMMON)Libraries/STM32_USB_HOST_Library/Class/MSC/inc
+CFLAGS += -I$(STM_COMMON)Utilities/Third_Party/fat_fs/inc
 #LDFLAGS = -L. 
 LDFLAGS += -lm
 #LDFLAGS += -l arm_cortexM4lf_math
