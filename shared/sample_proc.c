@@ -2,7 +2,7 @@
 #include "mfcc.h"
 
 uint16_t frame[DATA_ROW][DATA_COL] = { {0} };
-float32_t feature_vec[NUM_FRAME*DCT_DIGIT] = {0};
+float32_t feature_vec[NUM_FRAME][DCT_DIGIT] = {{0}};
 static float32_t Hamming[FRAME_SIZE];
 
 //static uint16_t zero_cross[DATA_COL] = {0};
@@ -53,7 +53,7 @@ inline void hamming_init()
     Hamming[i] = 0.54-0.46*arm_cos_f32((2*PI*i)/(FRAME_SIZE-1));
 }
 
-void enframe(uint16_t* _data, uint16_t _frame_num)
+void enframe(int16_t* _data, uint16_t _frame_num)
 {
   static float32_t fdata[FFT_SIZE];//static to prevent overflow. FFT_SIZE>FRAME_SIZE
   if(_frame_num >= NUM_FRAME)
@@ -66,7 +66,7 @@ void enframe(uint16_t* _data, uint16_t _frame_num)
     fdata[i] = Hamming[i]*_data[i];
   memset(fdata+FRAME_SIZE, 0, (FFT_SIZE-FRAME_SIZE+1)*sizeof(float32_t));//zero padding
 
-  mfcc(fdata, feature_vec+_frame_num*DCT_DIGIT);
+  mfcc(fdata, feature_vec[_frame_num]);
   enframe(_data+FRAME_SHIFT, _frame_num+1);
 }
 

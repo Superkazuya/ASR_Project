@@ -3,21 +3,21 @@
 STLINK=/home/superkazuya/Code/STM32_Dev/stlink
 DSP_PATH = $(STM_COMMON)Libraries/CMSIS/DSP_Lib/Source/
 
+BASEDIR=/home/superkazuya/Code/STM32_Dev/src/2014/record/
 # Put your source files here (or *.c, etc)
 SRCS=$(wildcard *.s) $(wildcard *.c)
 #SRCS += $(wildcard $(STM_COMMON)driver/*.c)
 SRCS += $(wildcard */*.c)
+SRCS += $(wildcard $(BASEDIR)shared/*.c)
 SRCS += $(DSP_PATH)TransformFunctions/arm_cfft_radix4_init_f32.c
 SRCS += $(DSP_PATH)TransformFunctions/arm_cfft_radix4_f32.c
 SRCS += $(DSP_PATH)TransformFunctions/arm_rfft_init_f32.c
 SRCS += $(DSP_PATH)TransformFunctions/arm_rfft_f32.c
 SRCS += $(DSP_PATH)CommonTables/arm_common_tables.c
 SRCS += $(DSP_PATH)ComplexMathFunctions/arm_cmplx_mag_squared_f32.c
-SRCS += $(DSP_PATH)TransformFunctions/arm_dct4_f32.c
-SRCS += $(DSP_PATH)TransformFunctions/arm_dct4_init_f32.c
-SRCS += $(DSP_PATH)BasicMathFunctions/arm_scale_f32.c
-SRCS += $(DSP_PATH)BasicMathFunctions/arm_mult_f32.c
 SRCS += $(DSP_PATH)ComplexMathFunctions/arm_cmplx_mult_cmplx_f32.c
+SRCS += $(DSP_PATH)BasicMathFunctions/arm_dot_prod_f32.c
+SRCS += $(DSP_PATH)BasicMathFunctions/arm_sub_f32.c
 SRCS += $(DSP_PATH)FastMathFunctions/arm_cos_f32.c
 
 #SLIB = $(wildcard $(STM_COMMON)PDMFilter/*.a)
@@ -49,6 +49,7 @@ CFLAGS += -DUSE_STDPERIPH_DRIVER -DARM_MATH_CM4 -D__FPU_PRESENT=1 -DUSE_USB_OTG_
 
 # Include files from STM libraries
 CFLAGS += -I.
+CFLAGS += -I../shared
 CFLAGS += -I$(STM_COMMON)Utilities/STM32F4-Discovery
 CFLAGS += -I$(STM_COMMON)Libraries/CMSIS/Include 
 CFLAGS += -I$(STM_COMMON)Libraries/CMSIS/ST/STM32F4xx/Include

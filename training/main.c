@@ -63,7 +63,7 @@ static void raw_buffull_handler()
   {
     SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
     STM_EVAL_LEDOn(LED3);
-    enframe(data, 0);
+    enframe((int16_t*)data, 0);
     while(1)
       usb_process();
   }
@@ -84,9 +84,11 @@ int main()
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);
   STM_EVAL_LEDInit(LED5);
+  STM_EVAL_LEDInit(LED6);
   STM_EVAL_LEDOff(LED3);
   STM_EVAL_LEDOff(LED4);
   STM_EVAL_LEDOff(LED5);
+  STM_EVAL_LEDOff(LED6);
   if(mfcc_init(SAMPLING_FREQZ) !=0)
     while(1);
   EVAL_AUDIO_Init(0, 80, SAMPLING_FREQZ);

@@ -2,19 +2,44 @@
 #include "mfcc.h"
 #include "sample_proc.h"
 #include "record.h"
-#include "usb.h"
+#include "data.h"
 
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
 uint16_t* raw_buffer=raw_buffer1;
 uint16_t data[MAX_BUF_SIZE];
+uint16_t result = 0;
+uint32_t test[6];
 
 
+uint32_t dtw_calc(float32_t *_vect1, uint16_t _len1, float32_t *_vect2, uint16_t _len2);
 static void event_handler();
 static void raw_buffull_handler();
 static void exit_handler();
 static void idle_handler();
 static void underrun_handler();
+
+uint16_t recognition()
+{
+  uint16_t min_loc = 1;
+  uint32_t min_val = dtw_calc(&feature_vec[0][0], NUM_FRAME, &fvector[0][0][0], NUM_FRAME);
+  test[0] = min_val;
+  uint32_t val;
+  uint16_t i;
+  for(i = 1; i < 5; ++i)
+  {
+    //val = dtw_calc(feature_vec, NUM_FRAME, &fvector[i][0], NUM_FRAME);
+    val = dtw_calc(&feature_vec[0][0], NUM_FRAME, &fvector[i][0][0], NUM_FRAME);
+    test[i]=val;
+    if(val < min_val)
+    {
+      min_val = val;
+      min_loc = i+1;
+    }
+  }
+  return min_loc;
+  test[5] = dtw_calc(&feature_vec[0][0], NUM_FRAME, &feature_vec[0][0], NUM_FRAME);
+}
 
 
 static void event_handler()
@@ -63,9 +88,9 @@ static void raw_buffull_handler()
   {
     SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
     STM_EVAL_LEDOn(LED3);
-    enframe(data, 0);
-    while(1)
-      usb_process();
+    enframe((int16_t*)data, 0);
+    result = recognition();
+    STM_EVAL_LEDOn(LED6);
   }
 
   //EVAL_AUDIO_Play(buff, sizeof(uint16_t)*OUT_BUFSIZE);
@@ -80,13 +105,14 @@ static void raw_buffull_handler()
 int main()
 {
   hamming_init();
-  usb_init();
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);
   STM_EVAL_LEDInit(LED5);
+  STM_EVAL_LEDInit(LED6);
   STM_EVAL_LEDOff(LED3);
   STM_EVAL_LEDOff(LED4);
   STM_EVAL_LEDOff(LED5);
+  STM_EVAL_LEDOff(LED6);
   if(mfcc_init(SAMPLING_FREQZ) !=0)
     while(1);
   EVAL_AUDIO_Init(0, 80, SAMPLING_FREQZ);

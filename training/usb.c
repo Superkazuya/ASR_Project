@@ -24,7 +24,7 @@ void bar(uint8_t);
 void foobar(USBH_CfgDesc_TypeDef *, USBH_InterfaceDesc_TypeDef *, USBH_EpDesc_TypeDef *);
 USBH_USR_Status UserInput();
 void EnumerationDone();
-uint32_t write_file(char* _filename, float32_t* _buffer, uint32_t _buf_size);
+uint32_t write_file(char* _filename, void* _buffer, uint32_t _buf_size);
 int USBH_USR_MSC_Application();
 
 
@@ -66,9 +66,11 @@ int USBH_USR_MSC_Application()
   static uint8_t is_rdy = 0;
   if(is_rdy)
   {
-    write_file("0:audio.dat", feature_vec, sizeof(float32_t)*NUM_FRAME*DCT_DIGIT);
+    write_file("mfcc.dat", (void*)(&feature_vec[0][0]), sizeof(float32_t)*NUM_FRAME*DCT_DIGIT);
+    write_file("audio.wav", (void*)data, sizeof(uint16_t)*MAX_BUF_SIZE);
+    f_mount(0, 0);
+    STM_EVAL_LEDOn(LED6);
     while(1);
-    //is_rdy = 0;
   }
   else
   {
@@ -105,7 +107,7 @@ void usb_process()
   USBH_Process(&USB_OTG_Core, &USB_Host);
 }
 
-uint32_t write_file(char* _filename, float32_t* _buffer, uint32_t _buf_size)
+uint32_t write_file(char* _filename, void* _buffer, uint32_t _buf_size)
 {
   UINT ret = 0;
   f_unlink(_filename);
@@ -113,7 +115,6 @@ uint32_t write_file(char* _filename, float32_t* _buffer, uint32_t _buf_size)
     while(1);
   f_write(&file, _buffer, (UINT)_buf_size, &ret);
   f_close(&file);
-  f_mount(0, 0);
   return((uint32_t)ret);
 }
 

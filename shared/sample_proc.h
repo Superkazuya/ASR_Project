@@ -7,4 +7,4 @@ PDMFilter_InitStruct pdm;
 inline void hamming_init();
 inline void filter_init();
 void sample_proc(int16_t _sample);
-void enframe(uint16_t* _data, uint16_t _frame_num);
+void enframe(int16_t* _data, uint16_t _frame_num);

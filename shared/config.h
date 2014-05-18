@@ -22,7 +22,7 @@
 #define ROW_PROC CEILING(DATA_COL-1, FRAME_SHIFT) //This many 1d arrays(frames) will be processed at most, for given FRAME_OVERLAP
 
 #define SAMPLING_FREQZ 16000
-#define VOLUME 40
+#define VOLUME 60
 
 
 #define FRAME_SIZE 256
@@ -96,4 +96,4 @@ extern uint16_t data[MAX_BUF_SIZE];
 #include "usbh_msc_core.h"
 */
 
-float32_t feature_vec[NUM_FRAME*DCT_DIGIT];
+float32_t feature_vec[NUM_FRAME][DCT_DIGIT];
