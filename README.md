@@ -5,6 +5,7 @@ ASR on STM32F4Discovery.
 
 #under construction
 ##todo
- * DTW
+ * Precalculate hamming/dct coefficients.
+ * Speech start/end point detection
  * realtime MFCC/DTW
  * HMM
