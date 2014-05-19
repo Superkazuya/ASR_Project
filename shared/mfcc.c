@@ -7,6 +7,8 @@ static arm_cfft_radix4_instance_f32 cfft;
 static arm_dct4_instance_f32 dct;
 static arm_rfft_instance_f32 dct_rfft;
 static arm_cfft_radix4_instance_f32 dct_cfft;
+#else
+static float32_t dct_coeff[DCT_DIGIT][NUM_FILTER_BANKS];
 #endif
 
 
@@ -89,6 +91,11 @@ int8_t mfcc_init(uint16_t _sample_rate)
 #ifdef ARM_DCT
   if(arm_dct4_init_f32(&dct, &dct_rfft, &dct_cfft, DCT_SIZE, DCT_SIZE/2, 600) != ARM_MATH_SUCCESS)
     return 1;
+#else
+  uint16_t i,j;
+  for(i = DCT_LOW; i <= DCT_HIGH; ++i)
+    for(j = 0; j < NUM_FILTER_BANKS; ++j)
+      dct_coeff[i-DCT_LOW][j] = arm_cos_f32(3.1415926*i*(j-0.5)/NUM_FILTER_BANKS);//todo
 #endif
   if(arm_rfft_init_f32(&rfft, &cfft, FFT_SIZE, 0, 1) != ARM_MATH_SUCCESS)
     return -1;
@@ -115,6 +122,6 @@ void mfcc(float32_t* _samples, float32_t* _mfcc)
   uint16_t i, j;
   for(i = DCT_LOW; i <= DCT_HIGH; ++i)
     for(j = 0; j < NUM_FILTER_BANKS; ++j)
-      _mfcc[i-DCT_LOW] += mfcc[j]*arm_cos_f32(3.1415926*i*(j-0.5)/NUM_FILTER_BANKS);//todo
+      _mfcc[i-DCT_LOW] += mfcc[j]*dct_coeff[i-DCT_LOW][j];
 #endif
 }

@@ -87,23 +87,18 @@ static void raw_buffull_handler()
   if(buff >= data+MAX_BUF_SIZE)
   {
     SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
-    STM_EVAL_LEDOn(LED3);
+    STM_EVAL_LEDOff(LED4);
     enframe((int16_t*)data, 0);
     result = recognition();
     STM_EVAL_LEDOn(LED6);
+    //EVAL_AUDIO_Play(data, sizeof(uint16_t)*MAX_BUF_SIZE);
   }
-
-  //EVAL_AUDIO_Play(buff, sizeof(uint16_t)*OUT_BUFSIZE);
-  /*
-  uint16_t i;
-  for(i = 0; i < OUT_BUFSIZE; ++i)
-    enframe(buff[i]);
-    */
 }
 
 
 int main()
 {
+  rawbuf_status = RAWBUF_IDLE;
   hamming_init();
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);

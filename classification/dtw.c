@@ -1,8 +1,5 @@
 #include "config.h"
-#define MAX(x,y) ((x) > (y) ? (x):(y))
-#define MIN(x,y) ((x) < (y) ? (x):(y))
-#define MIN3(x,y,z) ((x) < MIN(y,z) ? (x): MIN(y,z))
-#define ABS(x) ((x) < 0 ? (-(x)) : (x))
+#define MIN3(x,y,z) ((x) < MIN2(y,z) ? (x): MIN2(y,z))
 #define W_SIZE 60
 
 static inline uint32_t dist(float32_t* _vect1, float32_t* _vect2)
@@ -27,7 +24,7 @@ uint32_t dtw_calc(float32_t *_vect1, uint16_t _len1, float32_t *_vect2, uint16_t
   {
     uint32_t left = 9999999; //left = dtw[0];
     si = _vect1+i*DCT_DIGIT;
-    for(j = MAX(0,i-_w_size); j < MIN(_len2, i+_w_size+1); ++j)
+    for(j = MAX(0,i-_w_size); j < MIN2(_len2, i+_w_size+1); ++j)
     {
       tj = _vect2+j*DCT_DIGIT;
       top = dtw[j+1];

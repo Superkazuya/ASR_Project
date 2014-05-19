@@ -3,6 +3,7 @@
 #include "sample_proc.h"
 #include "record.h"
 #include "usb.h"
+#include "detection.h"
 
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
@@ -46,7 +47,6 @@ inline void exit_handler()
 
 static void raw_buffull_handler()
 {
-  STM_EVAL_LEDOn(LED4);
   static uint16_t* buff = data;
   if(rawbuf_status == RAWBUF_FULL1)
   {
@@ -58,12 +58,16 @@ static void raw_buffull_handler()
     PDM_Filter_64_LSB((uint8_t *)raw_buffer2, buff, VOLUME, &pdm);
     rawbuf_status &= ~RAWBUF_FULL2;
   }
+  if(detection((int16_t*)buff))
+    STM_EVAL_LEDOn(LED4);
+  else
+    STM_EVAL_LEDOff(LED4);
   buff += OUT_BUFSIZE;
   if(buff >= data+MAX_BUF_SIZE)
   {
     SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
-    STM_EVAL_LEDOn(LED3);
     enframe((int16_t*)data, 0);
+    STM_EVAL_LEDOn(LED5);
     while(1)
       usb_process();
   }
@@ -79,6 +83,7 @@ static void raw_buffull_handler()
 
 int main()
 {
+  rawbuf_status = RAWBUF_IDLE;
   hamming_init();
   usb_init();
   STM_EVAL_LEDInit(LED3);

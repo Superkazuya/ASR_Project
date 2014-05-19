@@ -17,6 +17,9 @@
 #define SPI_MOSI_SOURCE GPIO_PinSource3
 #define SPI_MOSI_AF GPIO_AF_SPI2
 
+#define MAX(x,y) ((x) > (y) ? (x):(y))
+#define MIN2(x,y) ((x) < (y) ? (x):(y))
+#define ABS(x) ((x) < 0 ? (-(x)) : (x))
 #define CEILING(x, y) (((x)+(y)-1)/(y))
 
 #define ROW_PROC CEILING(DATA_COL-1, FRAME_SHIFT) //This many 1d arrays(frames) will be processed at most, for given FRAME_OVERLAP
@@ -51,12 +54,6 @@ enum RAWBUFF_STATUS
   RAWBUF_UNDERRUN = RAWBUF_FULL1 | RAWBUF_FULL2,
   RAWBUF_LAST
 };
-
-enum SIG_STATUS
-{
-  SIG_LAST
-};
-
 //global variables
 //raw PDM data
 extern uint16_t raw_buffer1[RAW_BUFSIZE];
@@ -84,10 +81,11 @@ extern uint16_t data[MAX_BUF_SIZE];
 
 //dual-threshold end point detection settings
 #define DIFF 655
-#define ZSR_THRESHOLD_LOW (FRAME_SIZE*2*
-#define ZSR_THRESHOLD_HIGH (FRAME_SIZE*
-#define ENG_THRESHOLD_LOW (FRAME_SIZE*
-#define ENG_THRESHOLD_HIGH (FRAME_SIZE*
+#define DETECTION_LENGTH OUT_BUFSIZE
+#define ZCR_THRESHOLD_LOW (DETECTION_LENGTH*0.05)
+#define ZCR_THRESHOLD_HIGH (DETECTION_LENGTH*0.10)
+#define ENG_THRESHOLD_LOW (DETECTION_LENGTH*6000)
+#define ENG_THRESHOLD_HIGH (DETECTION_LENGTH*12000)
 
 /*
 #include "usb_hcd_int.h"
