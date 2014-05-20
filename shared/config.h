@@ -28,18 +28,19 @@
 #define VOLUME 60
 
 
+#define RECORD_MAX_TIME 3
 #define FRAME_SIZE 256
 #define DATA_COL FRAME_SIZE //must be multiple of OUT_BUFSIZE
 #define DATA_ROW ROW_PROC
 #define FRAME_OVERLAP 64
 #define FRAME_SHIFT (FRAME_SIZE-FRAME_OVERLAP)
-#define NUM_FRAME CEILING((MAX_BUF_SIZE-FRAME_OVERLAP), FRAME_SHIFT)//total # of frames of recorded data
+#define NUM_FRAME CEILING((RECORD_MAX_TIME*SAMPLING_FREQZ-FRAME_OVERLAP), FRAME_SHIFT)//total # of frames of recorded data
 #define RECI_DECIMATION 64
 #define RECORD_I2S_FS (SAMPLING_FREQZ*RECI_DECIMATION/16/2)
 #define OUT_BUFSIZE (SAMPLING_FREQZ/1000) //uint16_t
 #define RAW_BUFSIZE (SAMPLING_FREQZ*RECI_DECIMATION/8000/2) //uint16_t
 //pre-processed buffer
-#define MAX_BUF_SIZE (3*16000)
+#define MAX_BUF_SIZE (10*FRAME_SIZE) //minimal is 1*FRAME_SIZE , i tried 2*FRAME_SIZE but failed
 
 //FRAM_SHIFT <= DATA_COL, compile time check
 uint8_t check[FRAME_SHIFT <= DATA_COL ? 1:-1];

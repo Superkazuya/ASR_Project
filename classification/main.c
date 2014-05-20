@@ -7,10 +7,8 @@
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
 uint16_t* raw_buffer=raw_buffer1;
-//uint16_t data[MAX_BUF_SIZE];
 uint32_t dtw_mat[NUM_CLASS][NUM_FRAME+1] = {[0 ... NUM_CLASS-1][0 ... NUM_FRAME] = 9999999};
 uint16_t result = 0;
-uint32_t test[NUM_CLASS];
 
 //extern uint32_t dtw_calc(float32_t *_vect1, uint16_t _len1, float32_t *_vect2, uint16_t _len2);
 extern uint32_t dtw_calc(float32_t *_vect1, uint16_t _num_frame, float32_t *_vect2, uint16_t _len2, uint32_t* _dtw);
@@ -20,28 +18,11 @@ static void exit_handler();
 static void idle_handler();
 static void underrun_handler();
 
-uint16_t min_loc(uint32_t *_val, uint16_t _length)
-{
-  uint32_t min = _val[0];
-  uint16_t i;
-  uint16_t loc = 0;
-  for(i = 1; i < _length; ++i)
-    if(_val[i] < min)
-    {
-      min = _val[i];
-      loc = i;
-    }
-  return loc;
-}
-
 void post_proc_callback(float32_t *_feature_vec, uint16_t _frame_num)
 {
-  //uint32_t val[NUM_CLASS];
   uint16_t i;
   for(i = 0; i < NUM_CLASS; i++)
-    test[i] = dtw_calc(_feature_vec, _frame_num, (float32_t*)&fvector[i][0][0], NUM_FRAME, dtw_mat[i]);
-  if(_frame_num == (NUM_FRAME-1))
-    result = min_loc(test, NUM_CLASS);
+    dtw_calc(_feature_vec, _frame_num, (float32_t*)&fvector[i][0][0], NUM_FRAME, dtw_mat[i]);
 }
 
 /*
@@ -128,7 +109,15 @@ void post_process()
 {
   SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
   STM_EVAL_LEDOff(LED3);
-  //result = recognition();
+  uint32_t min = dtw_mat[0][NUM_FRAME];
+  uint16_t i;
+  uint16_t min_loc = 0;
+  for(i = 1; i < NUM_CLASS; ++i)
+    if(dtw_mat[i][NUM_FRAME] < min)
+    {
+      min = dtw_mat[i][NUM_FRAME];
+      min_loc = i;
+    }
   STM_EVAL_LEDOn(LED6);
   while(1);
 }

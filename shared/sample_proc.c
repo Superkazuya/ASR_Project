@@ -1,7 +1,6 @@
 #include "sample_proc.h"
 #include "mfcc.h"
 
-uint16_t frame[DATA_ROW][DATA_COL] = { {0} };
 float32_t feature_vec[NUM_FRAME][DCT_DIGIT] = {{0}};
 static float32_t Hamming[FRAME_SIZE];
 extern void post_process();
@@ -13,6 +12,10 @@ typedef struct {
   int16_t data[MAX_BUF_SIZE];
   uint16_t count;
 }circular_buffer;
+
+#ifdef DEBUG
+uint16_t debug_countmax = 0; //2000
+#endif
 
 static circular_buffer cbuffer = {0, 0, {0}, 0};
 
@@ -67,32 +70,25 @@ void enframe()
   static uint16_t frame_num = 0;
   if(cbuffer.count < FRAME_SIZE)
     return; //nothing to do
-  float32_t fdata[FFT_SIZE] = {0};//FFT_SIZE>FRAME_SIZE !!!!! todo
+  float32_t fdata[FFT_SIZE] = {0};
   if(frame_num >= NUM_FRAME)
-  {
-    /*
-    SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
-    STM_EVAL_LEDOn(LED5);
-    while(1)
-      usb_process();
-      */
-    //enframing done
     post_process();
-  }
 
   uint16_t i;
   uint16_t head_length = MAX_BUF_SIZE-cbuffer.header;
-  if(head_length < FRAME_SIZE)//complex case
+  if(head_length < MIN2(FRAME_SIZE,FFT_SIZE))//complex case
   {
     for(i = 0; i < head_length; i++)
       fdata[i] = Hamming[i]*cbuffer.data[cbuffer.header+i];
-    for(i = 0; i < FRAME_SIZE-head_length; i++)
+    for(i = 0; i < MIN2(FRAME_SIZE,FFT_SIZE)-head_length; i++)
       fdata[head_length+i] = Hamming[head_length+i]*cbuffer.data[i];
   }
   else //simple case
-    for(i = 0; i < FRAME_SIZE; ++i) //SIMD not available
+    for(i = 0; i < MIN2(FRAME_SIZE,FFT_SIZE); ++i) //SIMD not available
       fdata[i] = Hamming[i]*cbuffer.data[cbuffer.header+i];
+#if(FFT_SIZE > FRAME_SIZE)
   memset(fdata+FRAME_SIZE, 0, (FFT_SIZE-FRAME_SIZE+1)*sizeof(float32_t));//zero padding
+#endif
   cbuffer.count -= FRAME_SHIFT; //counter modification
   cbuffer.header += FRAME_SHIFT;
   if(cbuffer.header >= MAX_BUF_SIZE)
@@ -134,6 +130,10 @@ void EXTI0_IRQHandler(void)
     memcpy(buff+tail_length, cbuffer.data, sizeof(uint16_t)*(OUT_BUFSIZE-tail_length));
     cbuffer.tail = OUT_BUFSIZE-tail_length;
     cbuffer.count += OUT_BUFSIZE;
+#ifdef DEBUG
+    if(cbuffer.count > debug_countmax)
+      debug_countmax = cbuffer.count;
+#endif
   }
   else
   {
@@ -152,10 +152,4 @@ void EXTI0_IRQHandler(void)
 
     EXTI_ClearITPendingBit(EXTI_Line0);
   }
-  /*
-  enframe(buff, 0);
-  buff += OUT_BUFSIZE;
-  if(buff >= data+MAX_BUF_SIZE)
-  {
-      */
 }
