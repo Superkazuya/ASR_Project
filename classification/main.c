@@ -7,18 +7,42 @@
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
 uint16_t* raw_buffer=raw_buffer1;
-uint16_t data[MAX_BUF_SIZE];
+//uint16_t data[MAX_BUF_SIZE];
+uint32_t dtw_mat[NUM_CLASS][NUM_FRAME+1] = {[0 ... NUM_CLASS-1][0 ... NUM_FRAME] = 9999999};
 uint16_t result = 0;
-uint32_t test[6];
 
-
-uint32_t dtw_calc(float32_t *_vect1, uint16_t _len1, float32_t *_vect2, uint16_t _len2);
+extern uint32_t dtw_calc(float32_t *_vect1, uint16_t _num_frame, float32_t *_vect2, uint16_t _len2, uint32_t* _dtw);
 static void event_handler();
 static void raw_buffull_handler();
 static void exit_handler();
 static void idle_handler();
 static void underrun_handler();
 
+uint16_t max_loc(uint32_t *_val, uint16_t _length)
+{
+  uint32_t max = _val[0];
+  uint16_t i;
+  uint16_t loc = 0;
+  for(i = 1; i < _length; ++i)
+    if(_val[i] > max)
+    {
+      max = _val[i];
+      loc = i;
+    }
+  return loc;
+}
+
+void post_proc_callback(float32_t *_feature_vec, uint16_t _frame_num)
+{
+  uint32_t val[NUM_CLASS];
+  uint16_t i;
+  for(i = 0; i < NUM_CLASS; i++)
+    val[i] = dtw_calc(_feature_vec, _frame_num, (float32_t*)&fvector[i][0][0], NUM_FRAME, dtw_mat[i]);
+  if(_frame_num == (NUM_FRAME-1))
+    result = max_loc(val, NUM_CLASS);
+}
+
+/*
 uint16_t recognition()
 {
   uint16_t min_loc = 1;
@@ -40,6 +64,7 @@ uint16_t recognition()
   return min_loc;
   test[5] = dtw_calc(&feature_vec[0][0], NUM_FRAME, &feature_vec[0][0], NUM_FRAME);
 }
+*/
 
 
 static void event_handler()
@@ -71,6 +96,7 @@ inline void exit_handler()
 
 static void raw_buffull_handler()
 {
+  /*
   STM_EVAL_LEDOn(LED4);
   static uint16_t* buff = data;
   if(rawbuf_status == RAWBUF_FULL1)
@@ -93,8 +119,17 @@ static void raw_buffull_handler()
     STM_EVAL_LEDOn(LED6);
     //EVAL_AUDIO_Play(data, sizeof(uint16_t)*MAX_BUF_SIZE);
   }
+  */
 }
 
+void post_process()
+{
+  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
+  STM_EVAL_LEDOff(LED3);
+  //result = recognition();
+  STM_EVAL_LEDOn(LED6);
+  while(1);
+}
 
 int main()
 {
@@ -113,9 +148,10 @@ int main()
   EVAL_AUDIO_Init(0, 80, SAMPLING_FREQZ);
   record_init(RECORD_I2S_FS);
   SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);
+  STM_EVAL_LEDOn(LED3);
   //record start
   while(1)
-    event_handler();
+    enframe();
 }
 
 

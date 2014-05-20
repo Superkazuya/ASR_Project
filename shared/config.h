@@ -22,7 +22,7 @@
 #define ABS(x) ((x) < 0 ? (-(x)) : (x))
 #define CEILING(x, y) (((x)+(y)-1)/(y))
 
-#define ROW_PROC CEILING(DATA_COL-1, FRAME_SHIFT) //This many 1d arrays(frames) will be processed at most, for given FRAME_OVERLAP
+#define ROW_PROC (CEILING(DATA_COL, FRAME_SHIFT)) //This many 1d arrays(frames) will be processed at most, for given FRAME_OVERLAP
 
 #define SAMPLING_FREQZ 16000
 #define VOLUME 60
@@ -45,7 +45,6 @@
 uint8_t check[FRAME_SHIFT <= DATA_COL ? 1:-1];
 uint8_t check1[OUT_BUFSIZE < DATA_COL ? 1:-1];
 
-
 enum RAWBUFF_STATUS
 {
   RAWBUF_IDLE = 0,
@@ -54,6 +53,7 @@ enum RAWBUFF_STATUS
   RAWBUF_UNDERRUN = RAWBUF_FULL1 | RAWBUF_FULL2,
   RAWBUF_LAST
 };
+
 //global variables
 //raw PDM data
 extern uint16_t raw_buffer1[RAW_BUFSIZE];
@@ -64,9 +64,9 @@ __IO uint8_t rawbuf_status;
 //extern uint16_t buff[OUT_BUFSIZE];
 
 //framed PCM data
-extern uint16_t frame[DATA_ROW][DATA_COL]; 
+//extern uint16_t frame[DATA_ROW][DATA_COL]; 
 //speech data
-extern uint16_t data[MAX_BUF_SIZE];
+//extern uint16_t data[MAX_BUF_SIZE];
 
 //mfcc configuration
 #define FFT_SIZE 512 //FFT_SIZE >= FRAME_SIZE is recommanded
@@ -95,3 +95,5 @@ extern uint16_t data[MAX_BUF_SIZE];
 */
 
 float32_t feature_vec[NUM_FRAME][DCT_DIGIT];
+
+#define NUM_CLASS 5

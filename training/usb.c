@@ -67,7 +67,7 @@ int USBH_USR_MSC_Application()
   if(is_rdy)
   {
     write_file("mfcc.dat", (void*)(&feature_vec[0][0]), sizeof(float32_t)*NUM_FRAME*DCT_DIGIT);
-    write_file("audio.wav", (void*)data, sizeof(uint16_t)*MAX_BUF_SIZE);
+    //write_file("audio.wav", (void*)data, sizeof(uint16_t)*MAX_BUF_SIZE);
     f_mount(0, 0);
     STM_EVAL_LEDOn(LED6);
     while(1);

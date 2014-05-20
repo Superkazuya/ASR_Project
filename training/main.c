@@ -8,7 +8,6 @@
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
 uint16_t* raw_buffer=raw_buffer1;
-uint16_t data[MAX_BUF_SIZE];
 
 
 static void event_handler();
@@ -47,39 +46,18 @@ inline void exit_handler()
 
 static void raw_buffull_handler()
 {
-  static uint16_t* buff = data;
-  if(rawbuf_status == RAWBUF_FULL1)
-  {
-    PDM_Filter_64_LSB((uint8_t *)raw_buffer1, buff, VOLUME, &pdm);
-    rawbuf_status &= ~RAWBUF_FULL1;
-  }
-  else if(rawbuf_status == RAWBUF_FULL2)
-  {
-    PDM_Filter_64_LSB((uint8_t *)raw_buffer2, buff, VOLUME, &pdm);
-    rawbuf_status &= ~RAWBUF_FULL2;
-  }
-  if(detection((int16_t*)buff))
-    STM_EVAL_LEDOn(LED4);
-  else
-    STM_EVAL_LEDOff(LED4);
-  buff += OUT_BUFSIZE;
-  if(buff >= data+MAX_BUF_SIZE)
-  {
-    SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
-    enframe((int16_t*)data, 0);
-    STM_EVAL_LEDOn(LED5);
-    while(1)
-      usb_process();
-  }
-
-  //EVAL_AUDIO_Play(buff, sizeof(uint16_t)*OUT_BUFSIZE);
-  /*
-  uint16_t i;
-  for(i = 0; i < OUT_BUFSIZE; ++i)
-    enframe(buff[i]);
-    */
 }
 
+void post_process()
+{
+  STM_EVAL_LEDOff(LED3);
+  SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, DISABLE);
+  while(1)
+    usb_process();
+}
+
+void post_proc_callback(float32_t *_feature_vec, uint16_t _frame_num)
+{}
 
 int main()
 {
@@ -101,7 +79,7 @@ int main()
   SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);
   //record start
   while(1)
-    event_handler();
+    enframe();
 }
 
 
