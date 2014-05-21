@@ -57,11 +57,9 @@
 //#define I2S_INTERRUPT                 /* Uncomment this line to enable audio transfert with I2S interrupt*/ 
 
 /* Audio Transfer mode (DMA, Interrupt or Polling) */
-#define AUDIO_MAL_MODE_NORMAL         
-  /* Uncomment this line to enable the audio 
+#define AUDIO_MAL_MODE_NORMAL         /* Uncomment this line to enable the audio 
                                          Transfer using DMA */
-// #define AUDIO_MAL_MODE_CIRCULAR 
-/* Uncomment this line to enable the audio 
+/* #define AUDIO_MAL_MODE_CIRCULAR */ /* Uncomment this line to enable the audio 
                                          Transfer using DMA */
 
 /* For the DMA modes select the interrupt that will be used */
@@ -255,6 +253,7 @@ uint32_t EVAL_AUDIO_Stop(uint32_t CodecPowerDown_Mode);
 uint32_t EVAL_AUDIO_VolumeCtl(uint8_t Volume);
 uint32_t EVAL_AUDIO_Mute(uint32_t Command);
 void Audio_MAL_Play(uint32_t Addr, uint32_t Size);
+void DAC_Config(void);
 
 /* User Callbacks: user has to implement these functions in his code if
   they are needed. -----------------------------------------------------------*/
@@ -266,7 +265,7 @@ uint16_t EVAL_AUDIO_GetSampleCallBack(void);
    is called at the end of the whole audio file.
    In circular mode (when  the define AUDIO_MAL_MODE_CIRCULAR is enabled) this 
    function is called at the end of the current buffer transmission. */
-void EVAL_AUDIO_TransferComplete_CallBack(uint16_t* pBuffer, uint32_t Size);
+void EVAL_AUDIO_TransferComplete_CallBack(uint32_t pBuffer, uint32_t Size);
 
 /* This function is called when half of the requested buffer has been transferred 
    This callback is useful in Circular mode only (when AUDIO_MAL_MODE_CIRCULAR 

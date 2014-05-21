@@ -3,20 +3,22 @@
 #include "sample_proc.h"
 #include "record.h"
 #include "data.h"
+#include "usb.h"
 
 uint16_t raw_buffer1[RAW_BUFSIZE];
 uint16_t raw_buffer2[RAW_BUFSIZE];
 uint16_t* raw_buffer=raw_buffer1;
 uint32_t dtw_mat[NUM_CLASS][NUM_FRAME+1] = {[0 ... NUM_CLASS-1][0 ... NUM_FRAME] = 9999999};
-uint16_t result = 0;
+__IO uint16_t result = 0;
+//uint32_t test[NUM_CLASS];
 
 //extern uint32_t dtw_calc(float32_t *_vect1, uint16_t _len1, float32_t *_vect2, uint16_t _len2);
 extern uint32_t dtw_calc(float32_t *_vect1, uint16_t _num_frame, float32_t *_vect2, uint16_t _len2, uint32_t* _dtw);
-static void event_handler();
-static void raw_buffull_handler();
-static void exit_handler();
-static void idle_handler();
-static void underrun_handler();
+//static void event_handler();
+//static void raw_buffull_handler();
+//static void exit_handler();
+//static void idle_handler();
+//static void underrun_handler();
 
 void post_proc_callback(float32_t *_feature_vec, uint16_t _frame_num)
 {
@@ -26,30 +28,6 @@ void post_proc_callback(float32_t *_feature_vec, uint16_t _frame_num)
 }
 
 /*
-uint16_t recognition()
-{
-  uint16_t min_loc = 1;
-  uint32_t min_val = dtw_calc(&feature_vec[0][0], NUM_FRAME, &fvector[0][0][0], NUM_FRAME);
-  test[0] = min_val;
-  uint32_t val;
-  uint16_t i;
-  for(i = 1; i < 5; ++i)
-  {
-    //val = dtw_calc(feature_vec, NUM_FRAME, &fvector[i][0], NUM_FRAME);
-    val = dtw_calc(&feature_vec[0][0], NUM_FRAME, &fvector[i][0][0], NUM_FRAME);
-    test[i]=val;
-    if(val < min_val)
-    {
-      min_val = val;
-      min_loc = i+1;
-    }
-  }
-  return min_loc;
-  test[5] = dtw_calc(&feature_vec[0][0], NUM_FRAME, &feature_vec[0][0], NUM_FRAME);
-}
-*/
-
-
 static void event_handler()
 {
   //static event handler 
@@ -79,7 +57,6 @@ inline void exit_handler()
 
 static void raw_buffull_handler()
 {
-  /*
   STM_EVAL_LEDOn(LED4);
   static uint16_t* buff = data;
   if(rawbuf_status == RAWBUF_FULL1)
@@ -102,8 +79,8 @@ static void raw_buffull_handler()
     STM_EVAL_LEDOn(LED6);
     //EVAL_AUDIO_Play(data, sizeof(uint16_t)*MAX_BUF_SIZE);
   }
-  */
 }
+*/
 
 void post_process()
 {
@@ -118,8 +95,10 @@ void post_process()
       min = dtw_mat[i][NUM_FRAME];
       min_loc = i;
     }
+  result = min_loc;
   STM_EVAL_LEDOn(LED6);
-  while(1);
+  while(1)
+    usb_process();
 }
 
 int main()
@@ -134,9 +113,11 @@ int main()
   STM_EVAL_LEDOff(LED4);
   STM_EVAL_LEDOff(LED5);
   STM_EVAL_LEDOff(LED6);
+  usb_init();
   if(mfcc_init(SAMPLING_FREQZ) !=0)
     while(1);
-  EVAL_AUDIO_Init(0, 80, SAMPLING_FREQZ);
+
+  //EVAL_AUDIO_SetAudioInterface(AUDIO_INTERFACE_I2S);
   record_init(RECORD_I2S_FS);
   SPI_I2S_ITConfig(SPI2, SPI_I2S_IT_RXNE, ENABLE);
   STM_EVAL_LEDOn(LED3);
@@ -145,21 +126,3 @@ int main()
     enframe();
 }
 
-
-//User implemented callbacks
-uint16_t EVAL_AUDIO_GetSampleCallBack(void)
-{
-  return 0;
-}
-
-void EVAL_AUDIO_TransferComplete_CallBack(uint16_t* _ptr_buffer, uint32_t _size)
-{
-  //_size is always 0
-}
-
-uint32_t Codec_TIMEOUT_UserCallback(void)
-{
-  //timeout
-  while(1);
-  return 0;
-}

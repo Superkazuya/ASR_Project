@@ -37,7 +37,7 @@ CCA=arm-none-eabi-as
 CCLD=arm-none-eabi-ld
 OBJCOPY=arm-none-eabi-objcopy
 
-CFLAGS  = -g
+CFLAGS  = -g -O0
 CFLAGS += -Tstm32_flash.ld
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4
 CFLAGS += -mfloat-abi=hard
