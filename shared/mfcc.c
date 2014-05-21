@@ -137,9 +137,12 @@ void mfcc(float32_t* _samples, float32_t* _mfcc)
   arm_dct4_f32(&dct, state, mfcc); //dct can be in place
   memcpy(mfcc+DCT_LOW, _mfcc, DCT_DIGIT*sizeof(float32_t));
 #else
-  uint16_t i, j;
+  //uint16_t i, j;
+  uint16_t i;
   for(i = DCT_LOW; i <= DCT_HIGH; ++i)
-    for(j = 0; j < NUM_FILTER_BANKS; ++j)
-      _mfcc[i-DCT_LOW] += mfcc[j]*dct_coeff[i-DCT_LOW][j];
+    //for(j = 0; j < NUM_FILTER_BANKS; ++j)
+      //_mfcc[i-DCT_LOW] += mfcc[j]*dct_coeff[i-DCT_LOW][j];
+      arm_dot_prod_f32(mfcc, dct_coeff[i-DCT_LOW], NUM_FILTER_BANKS, _mfcc+i-DCT_LOW);
+
 #endif
 }
