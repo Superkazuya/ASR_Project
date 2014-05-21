@@ -47,6 +47,24 @@ static void mel_filterbanks_init(uint16_t _sample_rate)
     mel_lb += mel_delta;
   }
 }
+/*apply triangular filters. SUBSCRIPTS ARE NOT EXPECTED TO BE ACCURATE
+ *def log_mel_spectrum(INPUT[1 ... fft_size], OUTPUT[1 ... num_filterbanks]):
+ *  for bin in Range(bank[0], bank[1]):
+ *    OUTPUT[0] += INPUT[bin]*(bank[1]-bin])/(bank[1]-bank[0]);
+ *  for bin in Range(bank[End-1], bank[End]):
+ *    OUTPUT[End] += INPUT[bin]*(bank[1]-bin])/(bank[1]-bank[0]);
+ *  #calculate the first half and the last half separately
+ *
+ *  for i in range(1, num_filterbanks):
+ *    lowerbound = banks[i]
+ *    upperbound = banks[i+1]
+ *    delta = upperbound-lowerbound
+ *    for bin in range(lowerbound, upperbound):
+ *	val = (bin-lowerbound)/delta*INPUT[bin]
+ *	OUTPUT[i] += val
+ *	OUTPUT[i-1] += INPUT[bin]-val
+ *  OUTPUT = log(OUTPUT)
+ */ 
 
 static void log_mel_spectrum(float32_t *_input, float32_t* _output) 
 {

@@ -58,3 +58,17 @@ uint32_t dtw_calc(float32_t *_vect1, uint16_t _num_frame, float32_t *_vect2, uin
   return(_dtw[_len2]);
 }
 
+/*
+ * def dtw_calc(TEMPLATE[0 ... m], MFCC):
+ *    topleft = INFINITY
+ *    if(first frame):
+ *	topleft = 0
+ *    left = INFINITY
+ *    for i in Range(left window boundary ... right window boundary):
+ *	top = _dtw[i+1]
+ *	_dtw[i+1] = euclidean_distance(TEMPLATE[i], MFCC) + MIN(topleft, left, top)
+ *	topleft = top
+ *	left=_dtw[i+1]
+ *    return _dtw;
+ */
+ 
